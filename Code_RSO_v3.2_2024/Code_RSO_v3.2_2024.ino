@@ -27,8 +27,8 @@ byte valeurMaximumLed = 30;                               // Variable pour défi
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-
-
+int maxTemp = 70;                                         // Température de sécurité max pour couper la chauffe
+int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 
 void setup()
 {  
@@ -36,7 +36,7 @@ void setup()
   lcd.backlight();
   lcd.setCursor(0,0);
   lcd.print("Code V29-09-2024");
-  Delay(500);
+  delay(800);
 // --------------------------------------affichage dynamique-------------------------------------------
   lcd.setCursor(0,1);
   lcd.print("B");
@@ -103,17 +103,26 @@ void setup()
   delay(150);
 
   delay(2000);  // Délais de l'affichage du message initial
+
+  lcd.setCursor(0,0);                   // Bloc d'affichage de la config
+  lcd.print("Configuration : ");
+  lcd.setCursor(0,1);
+  lcd.print("Max:    Min:    ");
+  lcd.setCursor(5,1);
+  lcd.print(maxTemp);
+  lcd.setCursor(13,1);
+  lcd.print(medTemp);
+  delay(2000);
+
 // ----------------------------------------------------fin affichage dynamique
 
-  lcd.setCursor(0,1);
-  lcd.print("Pwr:            ");
-
-  // Serial.begin(9600);                                   // Initialisation pour le moniteur série, sera effacé dans la version finale
+  lcd.setCursor(0,1);                                      //   Affichage initial de PWR et TMP
+  lcd.print("Pwr:    Tmp:    ");                           //   Affichage initial de PWR et TMP
 
   emon1.voltage(2, 300, 1.7);                              // Tension: input pin, calibration, phase_shift
   emon1.current(1, 57);                                    // Courrant: input pin, calibration.
 
-  ds.begin();          // sonde DS18B20 activée
+  ds.begin();                                              // sonde DS18B20 activée
 
 }
 
@@ -123,13 +132,34 @@ void loop()
   ds.requestTemperatures();
   int t = ds.getTempCByIndex(0);
 
-  lcd.setCursor(8,1);
-  lcd.print("Tmp:    ");
-  lcd.setCursor(12,1);
-  lcd.print(t);
+  // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI
 
+  if(t == -127) // Si la SONDE EST ABSENTE, afficher un défaut sur lcd (sans sonde il s'affiche -127)
+    {
+    lcd.setCursor(8,1);
+    lcd.print("NoSensor");
+    }
 
+  while(t >= maxTemp)                                     // Si la température est supérieur à maxTemp degrés alors
+    {                                                     // afficher sur lcd et pause de la chauffe
+    lcd.setCursor(8,1);
+    lcd.print("MAX:    ");
+    lcd.setCursor(12,1);
+    lcd.print(t);
 
+    analogWrite(ledPin, 0);                             // Puissance led dans le dimmer à 0 pour arret de chauffe
+    lcd.setCursor(5,1);
+    lcd.print("   ");
+    lcd.setCursor(5,1);
+    lcd.print("0");
+
+    while(t >= maxTemp)                                   // Boucle de sécurité pour mettre en pause la chauffe
+      {
+      ds.requestTemperatures();                           // Reprise de la température pour confirmer
+      t = ds.getTempCByIndex(0);                          // Reprise de la température pour confirmer
+      delay(2000);                                        // Boucle de pause en attendant une redescente de la température
+      }
+    }
   //------------------------------------------------------------------------------------------------------------Calculs EmonLib
 
   
