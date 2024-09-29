@@ -158,6 +158,10 @@ void loop()
       ds.requestTemperatures();                           // Reprise de la température pour confirmer
       t = ds.getTempCByIndex(0);                          // Reprise de la température pour confirmer
       delay(2000);                                        // Boucle de pause en attendant une redescente de la température
+
+
+               //   A tester!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       }
     }
   //------------------------------------------------------------------------------------------------------------Calculs EmonLib
