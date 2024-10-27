@@ -112,7 +112,7 @@ void setup()
   lcd.print(maxTemp);
   lcd.setCursor(13,1);
   lcd.print(medTemp);
-  delay(2000);
+  delay(3000);
 
 // ----------------------------------------------------fin affichage dynamique
 
