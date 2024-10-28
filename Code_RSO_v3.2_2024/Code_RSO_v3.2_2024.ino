@@ -35,7 +35,7 @@ void setup()
   lcd.init();                       
   lcd.backlight();
   lcd.setCursor(0,0);
-  lcd.print("Code V29-09-2024");
+  lcd.print("Code V28-10-2024");
   delay(800);
 // --------------------------------------affichage dynamique-------------------------------------------
   lcd.setCursor(0,1);
@@ -131,6 +131,7 @@ void loop()
   //-----------------------------------------------------------Calcul de température
   ds.requestTemperatures();
   int t = ds.getTempCByIndex(0);
+  int tSTORE = 0;                       // température précédente enregistrée
 
   // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI
 
@@ -138,6 +139,16 @@ void loop()
     {
     lcd.setCursor(8,1);
     lcd.print("NoSensor");
+    tSTORE = 0;
+    }
+
+      if((t > 0) && (t < 110) && (tSTORE != t)) // Si la SONDE RENVOIT UNE TEMPERATURE COHERENTE et DIFFERENTE de l'affichage précédent, afficher température sur lcd
+    {
+    lcd.setCursor(8,1);
+    lcd.print("Tmp:    ");
+    lcd.setCursor(13,1);
+    lcd.print(t);
+    tSTORE = t;
     }
 
   while(t >= maxTemp)                                     // Si la température est supérieur à maxTemp degrés alors
