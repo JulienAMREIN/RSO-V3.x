@@ -7,15 +7,15 @@
 #include <LiquidCrystal_I2C.h>
 
 #include "EmonLib.h"
-// ---------------------------------------Partie pour la sonde DS18B20---------------------------------
+//-----------------------------------------------------------Partie pour la sonde DS18B20
 #include "OneWire.h"
 #include "DallasTemperature.h"
 OneWire oneWire(A3);                                      // Broche de connexion DATA de la sonde
 DallasTemperature ds(&oneWire);
-// ----------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------
 
 
-LiquidCrystal_I2C lcd(0x27,16,2);                         // adresse et format de l'écran
+LiquidCrystal_I2C lcd(0x27,16,2);                         // Adresse et format de l'écran
 EnergyMonitor emon1;
 
 byte ledPin = 9;                                          // Variable pour déterminer la pin de branchement de la led en PWM
@@ -29,6 +29,9 @@ byte valeurDecrementationLed = 1;                         // Le pas de décréme
 
 int maxTemp = 70;                                         // Température de sécurité max pour couper la chauffe
 int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
+int t = 0;                                                // Variable de stockage de la température relevée
+
 
 void setup()
 {  
@@ -37,7 +40,7 @@ void setup()
   lcd.setCursor(0,0);
   lcd.print("Code V28-10-2024");
   delay(800);
-// --------------------------------------affichage dynamique-------------------------------------------
+//----------------------------------------------------------- Affichage dynamique
   lcd.setCursor(0,1);
   lcd.print("B");
   delay(150);
@@ -102,22 +105,22 @@ void setup()
   lcd.print("N");
   delay(150);
 
-  delay(3000);  // Délais de l'affichage du message initial
+  delay(3000);                                             // Délais de l'affichage du message initial
 
-  lcd.setCursor(0,0);                   // Bloc d'affichage de la config
+  lcd.setCursor(0,0);                                      // Bloc d'affichage de la config
   lcd.print("Configuration : ");
   lcd.setCursor(0,1);
   lcd.print("Max:    Min:    ");
   lcd.setCursor(5,1);
-  lcd.print(maxTemp);
+  lcd.print(maxTemp);                                      // Affichage de la température maximum programmée
   lcd.setCursor(13,1);
-  lcd.print(medTemp);
+  lcd.print(medTemp);                                      // Affichage de la température minimum heure creuse programmée
   delay(5000);
 
-// ----------------------------------------------------fin affichage dynamique
+//----------------------------------------------------------- Fin affichage dynamique
 
-  lcd.setCursor(0,1);                                      //   Affichage initial de PWR et TMP
-  lcd.print("Pwr:    Tmp:    ");                           //   Affichage initial de PWR et TMP
+  lcd.setCursor(0,1);                                      // Affichage initial de PWR et TMP
+  lcd.print("Pwr:    Tmp:    ");                           // Affichage initial de PWR et TMP
 
   emon1.voltage(2, 300, 1.7);                              // Tension: input pin, calibration, phase_shift
   emon1.current(1, 57);                                    // Courrant: input pin, calibration.
@@ -126,56 +129,61 @@ void setup()
 
 }
 
+//----------------------------------------------------------- Début de la boucle principale
 void loop()
 {
-  //-----------------------------------------------------------Calcul de température
+//----------------------------------------------------------- Calcul de température
+
   ds.requestTemperatures();
-  int t = ds.getTempCByIndex(0);
-  int tSTORE = 0;                       // température précédente enregistrée
+  t = ds.getTempCByIndex(0);                              // Affecter à t la valeur de la température relevée
 
-  // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI
+  // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI: 
+  // --------------------------------------- 1:Erreur sonde
+  // --------------------------------------- 2:Température cohérente et affichage LCD à modifier car évolution par rapport à la température précédente
+  // --------------------------------------- 3:Température TROP ELEVEE par rapport à température MAX programmée
+  // --------------------------------------- 4:Température TROP BASSE et HEURE CREUSE par rapport à température mini programmée
 
-  if(t == -127) // Si la SONDE EST ABSENTE, afficher un défaut sur lcd (sans sonde il s'affiche -127)
+  // TRAITEMENT 1: Erreur sonde
+  if(t == -127)                                           // Si la SONDE EST ABSENTE, (sans sonde il s'affiche -127)
     {
-    lcd.setCursor(8,1);
+    lcd.setCursor(8,1);                                   // afficher un message de défaut sur lcd 
     lcd.print("NoSensor");
-    tSTORE = 0;
+    tSTORE = 0;                                           // Mettre à jour la valeur de t dans tSTORE
     }
 
-      if((t > 0) && (t < 110) && (tSTORE != t)) // Si la SONDE RENVOIT UNE TEMPERATURE COHERENTE et DIFFERENTE de l'affichage précédent, afficher température sur lcd
+  // TRAITEMENT 2: MAJ affichage de la température
+  if((t > 0) && (t < 110) && (tSTORE != t))               // Si la SONDE RETOURNE UNE TEMPERATURE COHERENTE et DIFFERENTE de l'affichage précédent, afficher la température sur lcd
     {
     lcd.setCursor(8,1);
     lcd.print("Tmp:    ");
     lcd.setCursor(13,1);
     lcd.print(t);
-    tSTORE = t;
+    tSTORE = t;                                           // Mettre à jour la valeur de t dans tSTORE
     }
 
+  // TRAITEMENT 3: Température trop élevée
   while(t >= maxTemp)                                     // Si la température est supérieur à maxTemp degrés alors
-    {                                                     // afficher sur lcd et pause de la chauffe
+    {                                                     // afficher sur lcd et pause de la chauffe à cause de la boucle
     lcd.setCursor(8,1);
     lcd.print("MAX:    ");
-    lcd.setCursor(12,1);
+    lcd.setCursor(13,1);
     lcd.print(t);
 
-    analogWrite(ledPin, 0);                             // Puissance led dans le dimmer à 0 pour arret de chauffe
+    analogWrite(ledPin, 0);                               // Puissance led dans le dimmer à 0 pour arret de chauffe
     lcd.setCursor(5,1);
-    lcd.print("   ");
+    lcd.print("   ");                                     // Effacer la valeur de power
     lcd.setCursor(5,1);
-    lcd.print("0");
+    lcd.print("0");                                       // Ecrire 0 pour la valeur de power
 
-    while(t >= maxTemp)                                   // Boucle de sécurité pour mettre en pause la chauffe
-      {
-      ds.requestTemperatures();                           // Reprise de la température pour confirmer
-      t = ds.getTempCByIndex(0);                          // Reprise de la température pour confirmer
-      delay(2000);                                        // Boucle de pause en attendant une redescente de la température
-
-
-               //   A tester!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      }
+      while(t >= maxTemp)                                 // Boucle de sécurité pour mettre en pause la chauffe et relever la température
+        {
+        ds.requestTemperatures();                         // Reprise de la température pour confirmer
+        t = ds.getTempCByIndex(0);                        // Reprise de la température pour confirmer
+        delay(8000);                                      // Boucle de pause en attendant une redescente de la température
+        }
     }
-  //------------------------------------------------------------------------------------------------------------Calculs EmonLib
+    
+//----------------------------------------------------------- Calculs EmonLib
 
   
   delay(250);
