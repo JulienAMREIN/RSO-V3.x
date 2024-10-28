@@ -10,7 +10,7 @@
 // ---------------------------------------Partie pour la sonde DS18B20---------------------------------
 #include "OneWire.h"
 #include "DallasTemperature.h"
-OneWire oneWire(A1);                                      // Broche de connexion DATA de la sonde
+OneWire oneWire(A3);                                      // Broche de connexion DATA de la sonde
 DallasTemperature ds(&oneWire);
 // ----------------------------------------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ void setup()
   lcd.print("N");
   delay(150);
 
-  delay(2000);  // Délais de l'affichage du message initial
+  delay(3000);  // Délais de l'affichage du message initial
 
   lcd.setCursor(0,0);                   // Bloc d'affichage de la config
   lcd.print("Configuration : ");
@@ -112,7 +112,7 @@ void setup()
   lcd.print(maxTemp);
   lcd.setCursor(13,1);
   lcd.print(medTemp);
-  delay(3000);
+  delay(5000);
 
 // ----------------------------------------------------fin affichage dynamique
 
