@@ -27,7 +27,7 @@ byte valeurMaximumLed = 30;                               // Variable pour défi
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-int maxTemp = 70;                                         // Température de sécurité max pour couper la chauffe
+int maxTemp = 25;                                         // Température de sécurité max pour couper la chauffe
 int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
@@ -162,8 +162,8 @@ void loop()
     }
 
   // TRAITEMENT 3: Température trop élevée
-  while(t >= maxTemp)                                     // Si la température est supérieur à maxTemp degrés alors
-    {                                                     // afficher sur lcd et pause de la chauffe à cause de la boucle
+  if(t >= maxTemp)                                        // Si la température est supérieur à maxTemp degrés alors
+    {                                                     // afficher sur lcd MAX et valeur
     lcd.setCursor(8,1);
     lcd.print("MAX:    ");
     lcd.setCursor(13,1);
@@ -171,14 +171,23 @@ void loop()
 
     analogWrite(ledPin, 0);                               // Puissance led dans le dimmer à 0 pour arret de chauffe
     lcd.setCursor(5,1);
-    lcd.print("   ");                                     // Effacer la valeur de power
+    lcd.print("   ");                                     // Effacer la valeur de power sur l'écran LCD
     lcd.setCursor(5,1);
-    lcd.print("0");                                       // Ecrire 0 pour la valeur de power
+    lcd.print("0");                                       // Ecrire 0 pour la valeur de power sur l'écran LCD
 
       while(t >= maxTemp)                                 // Boucle de sécurité pour mettre en pause la chauffe et relever la température
         {
         ds.requestTemperatures();                         // Reprise de la température pour confirmer
         t = ds.getTempCByIndex(0);                        // Reprise de la température pour confirmer
+
+          if(t != tSTORE)                                 // Si la température relevée à évoluée
+            {
+            lcd.setCursor(8,1);
+            lcd.print("Tmp:    ");                        // Mettre à jour la valeur affichée sur l'écran LCD
+            lcd.setCursor(13,1);
+            lcd.print(t);                                 
+            tSTORE = t;                                   // Mettre à jour la valeur de t dans tSTORE
+            }
         delay(8000);                                      // Boucle de pause en attendant une redescente de la température
         }
     }
