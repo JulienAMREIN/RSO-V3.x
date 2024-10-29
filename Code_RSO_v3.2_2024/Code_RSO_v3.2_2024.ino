@@ -1,7 +1,7 @@
 // Routeur Solaire - V3 - Julien AMREIN, Licence GNU GPL V3
 
 // La résistance testée sur le dispositif doit etre au minimum de [33 000 ohms] pour le photo-régulateur DIY
-
+// Jour nuit sur digital 7
 
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
@@ -188,7 +188,72 @@ void loop()
             lcd.print(t);                                 
             tSTORE = t;                                   // Mettre à jour la valeur de t dans tSTORE
             }
-        delay(8000);                                      // Boucle de pause en attendant une redescente de la température
+
+//----------------------------------------------------------- Temporisation avec affichage sur écran LCD
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("*               ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print(" *              ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("  *             ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("   *            ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("    *           ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("     *          ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("      *         ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("       *        ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("        *       ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("         *      ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("          *     ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("           *    ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("            *   ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("             *  ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("              * ");
+
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
+        lcd.print("               *");
         }
     }
     
