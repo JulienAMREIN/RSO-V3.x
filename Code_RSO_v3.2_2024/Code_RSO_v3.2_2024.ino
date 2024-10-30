@@ -27,8 +27,8 @@ byte valeurMaximumLed = 30;                               // Variable pour défi
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-int maxTemp = 25;                                         // Température de sécurité max pour couper la chauffe
-int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+const int maxTemp = 25;                                         // Température de sécurité max pour couper la chauffe
+const int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
 
@@ -143,8 +143,8 @@ void loop()
   t = ds.getTempCByIndex(0);                              // Affecter à t la valeur de la température relevée
 
   // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI: 
-  // --------------------------------------- 1:Erreur sonde
-  // --------------------------------------- 2:Température cohérente et affichage LCD à modifier car évolution par rapport à la température précédente
+  // ----------------ok--------------------- 1:Erreur sonde
+  // ----------------ok--------------------- 2:Température cohérente et affichage LCD à modifier car évolution par rapport à la température précédente
   // --------------------------------------- 3:Température TROP ELEVEE par rapport à température MAX programmée
   // --------------------------------------- 4:Température TROP BASSE et HEURE CREUSE par rapport à température mini programmée
 
@@ -174,11 +174,12 @@ void loop()
     lcd.setCursor(13,1);
     lcd.print(t);
 
-    analogWrite(ledPin, 0);                               // Puissance led dans le dimmer à 0 pour arret de chauffe
+    valeurLedDimmer = 0;
+    analogWrite(ledPin, valeurLedDimmer);                 // Puissance led dans le dimmer à 0 pour arret de chauffe
     lcd.setCursor(5,1);
     lcd.print("   ");                                     // Effacer la valeur de power sur l'écran LCD
     lcd.setCursor(5,1);
-    lcd.print("0");                                       // Ecrire 0 pour la valeur de power sur l'écran LCD
+    lcd.print(valeurLedDimmer);                                       // Ecrire 0 pour la valeur de power sur l'écran LCD
 
       while(t >= maxTemp)                                 // Boucle de sécurité pour mettre en pause la chauffe et relever la température
         {
