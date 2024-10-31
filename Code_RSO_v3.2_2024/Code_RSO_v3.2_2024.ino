@@ -123,7 +123,8 @@ void setup()
   delay(5000);
 
 //----------------------------------------------------------- Fin affichage dynamique
-
+  lcd.setCursor(0,0);                                      // Bloc d'affichage initial avant apparition de "consommation ou injection"
+  lcd.print("Initialisation..");
   lcd.setCursor(0,1);                                      // Affichage initial de PWR et TMP
   lcd.print("Pwr:    Tmp:    ");                           // Affichage initial de PWR et TMP
 
