@@ -27,8 +27,8 @@ byte valeurMaximumLed = 30;                               // Variable pour défi
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-const int maxTemp = 25;                                         // Température de sécurité max pour couper la chauffe
-const int medTemp = 40;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+const int maxTemp = 65;                                         // Température de sécurité max pour couper la chauffe
+const int medTemp = 39;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
 
@@ -43,7 +43,7 @@ void setup()
   lcd.init();                       
   lcd.backlight();
   lcd.setCursor(0,0);
-  lcd.print("Code V30-10-2024");
+  lcd.print("Code V31-10-2024");
   delay(800);
 //----------------------------------------------------------- Affichage dynamique
   lcd.setCursor(0,1);
@@ -146,7 +146,7 @@ void loop()
   // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI: 
   // ----------------ok--------------------- 1:Erreur sonde
   // ----------------ok--------------------- 2:Température cohérente et affichage LCD à modifier car évolution par rapport à la température précédente
-  // --------------------------------------- 3:Température TROP ELEVEE par rapport à température MAX programmée
+  // ----------------ok--------------------- 3:Température TROP ELEVEE par rapport à température MAX programmée
   // --------------------------------------- 4:Température TROP BASSE et HEURE CREUSE par rapport à température mini programmée
 
   // TRAITEMENT 1: Erreur sonde
