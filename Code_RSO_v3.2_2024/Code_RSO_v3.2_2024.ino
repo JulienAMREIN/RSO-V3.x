@@ -3,17 +3,16 @@
 // La résistance testée sur le dispositif doit etre au minimum de [33 000 ohms] pour le photo-régulateur DIY
 // Jour nuit sur digital 7
 
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
+#include <Wire.h>                                         // Lib pour protocol I2C
+#include <LiquidCrystal_I2C.h>                            // Lib pour écran LCD
+#include "EmonLib.h"                                      // Lib pour la gestion de la pince ampèremétrique
+#include "OneWire.h"                                      // Lib pour la gestion de la sonde DS18B20
+#include "DallasTemperature.h"                            // Lib pour la gestion de la sonde DS18B20
 
-#include "EmonLib.h"
-//-----------------------------------------------------------Partie pour la sonde DS18B20
-#include "OneWire.h"
-#include "DallasTemperature.h"
+int versionCode = "Code V01-10-2024";
+
 OneWire oneWire(A3);                                      // Broche de connexion DATA de la sonde
 DallasTemperature ds(&oneWire);
-// ---------------------------------------------------------------------------------------
-
 
 LiquidCrystal_I2C lcd(0x27,16,2);                         // Adresse et format de l'écran
 EnergyMonitor emon1;
@@ -27,23 +26,23 @@ byte valeurMaximumLed = 30;                               // Variable pour défi
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-const int maxTemp = 65;                                         // Température de sécurité max pour couper la chauffe
-const int medTemp = 39;                                         // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+byte maxTemp = 65;                                        // Température de sécurité max pour couper la chauffe
+byte medTemp = 35;                                        // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
 
-const int brocheBoutonAssist = 7;                         // Broche utilisée pour détecter le sélecteur de marche Hiver, jour/nuit
-int etatBoutonAssist = 0;                                 // Etat du sélecteur de marche Hiver, jour/nuit
+byte brocheBoutonAssist = 7;                              // Broche utilisée pour détecter le sélecteur de marche Hiver, jour/nuit
+int etatBoutonAssist = LOW;                               // Etat du sélecteur de marche Hiver, jour/nuit
 
 void setup()
 {
 
-  pinMode(brocheBoutonAssist, INPUT);                      // Déclaration de la broche du sélecteur de marche Hiver, jour/nuit
+  pinMode(brocheBoutonAssist, INPUT);                     // Déclaration de la broche du sélecteur de marche Hiver, jour/nuit
 
   lcd.init();                       
   lcd.backlight();
   lcd.setCursor(0,0);
-  lcd.print("Code V31-10-2024");
+  lcd.print(versionCode);
   delay(800);
 //----------------------------------------------------------- Affichage dynamique
   lcd.setCursor(0,1);
