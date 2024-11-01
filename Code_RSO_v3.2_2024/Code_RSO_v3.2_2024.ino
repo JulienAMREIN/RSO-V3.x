@@ -180,7 +180,7 @@ void loop()
     lcd.setCursor(5,1);
     lcd.print("   ");                                     // Effacer la valeur de power sur l'écran LCD
     lcd.setCursor(5,1);
-    lcd.print(valeurLedDimmer);                                       // Ecrire 0 pour la valeur de power sur l'écran LCD
+    lcd.print(valeurLedDimmer);                           // Ecrire 0 pour la valeur de power sur l'écran LCD
 
       while(t >= maxTemp)                                 // Boucle de sécurité pour mettre en pause la chauffe et relever la température
         {
@@ -220,14 +220,11 @@ void loop()
 
         delay(1000);                                         // Boucle de pause en attendant une redescente de la température
         lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("  *Surchauffe*  ");
-
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("   Surchauffe   ");        
-
+        lcd.print("  *Surchauffe*  ");        
         }
-
+        
+    lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+    lcd.print("Sortie surchauf.");
     lcd.setCursor(0,1);                                      // Affichage initial de PWR et TMP pour la  sortie de boucle
     lcd.print("Pwr:    Tmp:    ");                           // Affichage initial de PWR et TMP pour la  sortie de boucle
     }
@@ -245,14 +242,14 @@ void loop()
 
   if((t < medTemp) && (t > 0) && (etatBoutonAssist == HIGH))// Si une sonde est connectée et si la température est inférieur au mini et si mode hiver enclenché alors
     {
+    analogWrite(ledPin, valeurMaximumLed);              // Puissance de chauffe maximum
+    lcd.setCursor(5,1);                                 // Affichage sur ecran LCD de power au maximum
+    lcd.print("   ");
+    lcd.setCursor(5,1);
+    lcd.print(valeurMaximumLed);
+
     while((t < medTemp) && (t > 0) && (etatBoutonAssist == HIGH))
       {
-      analogWrite(ledPin, valeurMaximumLed);              // Puissance de chauffe maximum
-      lcd.setCursor(5,1);
-      lcd.print("   ");
-      lcd.setCursor(5,1);
-      lcd.print(valeurMaximumLed);
-
         //----------------------------------------------------------- Temporisation avec affichage sur écran LCD
 
       delay(1000);                                         // Boucle de pause en attendant une remontée de la température
@@ -279,26 +276,29 @@ void loop()
       lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
       lcd.print("  *Mode Hiver*  ");
 
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print("   Mode Hiver   ");
-
       etatBoutonAssist = digitalRead(brocheBoutonAssist);  // ici lire l'état du bouton sélecteur de mode hiver
-      ds.requestTemperatures();                         // Reprise de la température pour confirmer
-      t = ds.getTempCByIndex(0);                        // Reprise de la température pour confirmer
+      ds.requestTemperatures();                            // Reprise de la température pour confirmer
+      t = ds.getTempCByIndex(0);                           // Reprise de la température pour confirmer
 
-          if(t != tSTORE)                                 // Si la température relevée à évoluée
+          if(t != tSTORE)                                  // Si la température relevée à évoluée
             {
             lcd.setCursor(12,1);
-            lcd.print("    ");                            // Mettre à jour la valeur affichée sur l'écran LCD
+            lcd.print("    ");                             // Mettre à jour la valeur affichée sur l'écran LCD
             lcd.setCursor(13,1);
             lcd.print(t);                                 
-            tSTORE = t;                                      // Mettre à jour la valeur de t dans tSTORE
+            tSTORE = t;                                    // Mettre à jour la valeur de t dans tSTORE
             }
 
       }
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de sortie du mode hiver
-        lcd.print("Mode Hiver FINI ");
+    valeurLedDimmer = 0;
+    analogWrite(ledPin, valeurLedDimmer);               // Puissance de chauffe à 0 pour fin de mode hiver
+    lcd.setCursor(5,1);                                 // Affichage sur ecran LCD de power à 0
+    lcd.print("   ");
+    lcd.setCursor(5,1);
+    lcd.print(valeurLedDimmer);
+
+    lcd.setCursor(0,0);                                // Bloc d'affichage du hautde sortie du mode hiver
+    lcd.print("Mode Hiver FINI ");
   }
 
 
@@ -363,7 +363,6 @@ void loop()
     }
 
     statusCourantLed = 1;                                // Attribution de la valeur d'état précédent     0= initial   1=était en conso EDF   2=était en injection EDF
-
   }
 
   // On Injecte de l'électricité------------------------------------------------------------------------------------------------------------
@@ -373,7 +372,7 @@ void loop()
 
     if(statusCourantLed == 1)                            // Et si avant on consommait de l'électricité depuis EDF
     {                                                    // Alors
-      lcd.setCursor(1,0);
+      lcd.setCursor(0,0);
       lcd.print("INJECTION >>>   ");
 
       delay(delayChangementEtat);                        // on reste X secondes avant de continuer dans le code
@@ -394,10 +393,7 @@ void loop()
       lcd.print(valeurLedDimmer);
     }
 
-    
-
     statusCourantLed = 2;                                // Attribution de la valeur d'état précédent     0= initial   1=était en conso EDF   2=était en injection EDF
-
   }
 
   // On est neutre en conso. ------------------------------------------------------------------------------------------------------------
