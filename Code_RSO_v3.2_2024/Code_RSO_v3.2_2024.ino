@@ -32,7 +32,7 @@ int tSTORE = 0;                                           // Variable de stockag
 int t = 0;                                                // Variable de stockage de la température relevée
 
 byte brocheBoutonAssist = 7;                              // Broche utilisée pour détecter le sélecteur de marche Hiver, jour/nuit
-int etatBoutonAssist = LOW;                               // Etat du sélecteur de marche Hiver, jour/nuit
+int etatBoutonAssist = HIGH;                              // Etat du sélecteur de marche Hiver, jour/nuit
 
 void setup()
 {
@@ -192,62 +192,55 @@ void loop()
             lcd.print("    ");                            // Mettre à jour la valeur affichée sur l'écran LCD
             lcd.setCursor(13,1);
             lcd.print(t);                                 
-            tSTORE = t;                                      // Mettre à jour la valeur de t dans tSTORE
+            tSTORE = t;                                   // Mettre à jour la valeur de t dans tSTORE
             }
 
 //----------------------------------------------------------- Temporisation avec affichage sur écran LCD
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print("   Surchauffe   ");
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print("  *Surchauffe*  ");
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print(" * Surchauffe * ");
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print("*  Surchauffe  *");
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print(" * Surchauffe * ");
 
-        delay(1000);                                         // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
+        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
         lcd.print("  *Surchauffe*  ");        
         }
         
-    lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
+    lcd.setCursor(0,0);                                   // Bloc d'affichage de la sécurité de chauffe
     lcd.print("Sortie surchauf.");
-    lcd.setCursor(0,1);                                      // Affichage initial de PWR et TMP pour la  sortie de boucle
-    lcd.print("Pwr:    Tmp:    ");                           // Affichage initial de PWR et TMP pour la  sortie de boucle
+    lcd.setCursor(0,1);                                   // Affichage initial de PWR et TMP pour la  sortie de boucle
+    lcd.print("Pwr:    Tmp:    ");                        // Affichage initial de PWR et TMP pour la  sortie de boucle
     }
-
-
-
-
-
-
-
 
   // TRAITEMENT 4: CHAUFFE A LA TEMPERATURE MINIMUM EN HEURE CREUSE
 
-  etatBoutonAssist = digitalRead(brocheBoutonAssist);           // ici lire l'état du bouton sélecteur de mode hiver
+  etatBoutonAssist = digitalRead(brocheBoutonAssist);     // ici lire l'état du bouton sélecteur de mode hiver
 
-  if((t < medTemp) && (t > 0) && (etatBoutonAssist == HIGH))// Si une sonde est connectée et si la température est inférieur au mini et si mode hiver enclenché alors
+  if((t < medTemp) && (t > 0) && (etatBoutonAssist == LOW))// Si une sonde est connectée et si la température est inférieur au mini et si mode hiver enclenché alors
     {
-    analogWrite(ledPin, valeurMaximumLed);              // Puissance de chauffe maximum
-    lcd.setCursor(5,1);                                 // Affichage sur ecran LCD de power au maximum
+    analogWrite(ledPin, valeurMaximumLed);                // Puissance de chauffe maximum
+    lcd.setCursor(5,1);                                   // Affichage sur ecran LCD de power au maximum
     lcd.print("   ");
     lcd.setCursor(5,1);
     lcd.print(valeurMaximumLed);
 
-    while((t < medTemp) && (t > 0) && (etatBoutonAssist == HIGH))
+    while((t < medTemp) && (t > 0) && (etatBoutonAssist == LOW))
       {
         //----------------------------------------------------------- Temporisation avec affichage sur écran LCD
 
@@ -300,21 +293,7 @@ void loop()
     lcd.print("Mode Hiver FINI ");
   }
 
-
-
-
-
-
-
-
-
-
-
-
 //----------------------------------------------------------- Calculs EmonLib
-
-  
-  //  delay(250);
 
   emon1.calcVI(20,500);                                   // Calculate all. No.of half wavelengths (crossings), time-out
 
@@ -323,7 +302,6 @@ void loop()
   float powerFActor     = emon1.powerFactor;              //extract Power Factor into Variable
   float supplyVoltage   = emon1.Vrms;                     //extract Vrms into Variable
   float Irms            = emon1.Irms;                     //extract Irms into Variable
-
 
   // On Consomme de l'électricité------------------------------------------------------------------------------------------------------------
 
