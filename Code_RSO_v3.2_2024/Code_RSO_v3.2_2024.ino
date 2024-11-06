@@ -9,8 +9,6 @@
 #include "OneWire.h"                                      // Lib pour la gestion de la sonde DS18B20
 #include "DallasTemperature.h"                            // Lib pour la gestion de la sonde DS18B20
 
-int versionCode = "Code V01-10-2024";
-
 OneWire oneWire(A3);                                      // Broche de connexion DATA de la sonde
 DallasTemperature ds(&oneWire);
 
@@ -42,9 +40,13 @@ void setup()
   lcd.init();                       
   lcd.backlight();
   lcd.setCursor(0,0);
-  lcd.print(versionCode);
-  delay(800);
+  lcd.print("Code V06-10-2024");
+  lcd.setCursor(0,1);
+  lcd.print("PCB Mod: BLACK");
+  delay(1500);
 //----------------------------------------------------------- Affichage dynamique
+  lcd.setCursor(0,1);
+  lcd.print("                ");                         // Clear de la ligne du bas
   lcd.setCursor(0,1);
   lcd.print("B");
   delay(150);
