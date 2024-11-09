@@ -1,7 +1,8 @@
-// Routeur Solaire - V3 - Julien AMREIN, Licence GNU GPL V3
+// Routeur Solaire - V3.1.1
+// Julien AMREIN - 2024
+// Created under GNU GPL V3 licence
 
 // La résistance testée sur le dispositif doit etre au minimum de [33 000 ohms] pour le photo-régulateur DIY
-// Jour nuit sur digital 7
 
 #include <Wire.h>                                         // Lib pour protocol I2C
 #include <LiquidCrystal_I2C.h>                            // Lib pour écran LCD
@@ -19,18 +20,37 @@ byte ledPin = 9;                                          // Variable pour déte
 byte valeurLedDimmer = 0;                                 // Variable de la valeur de sortie sur la pin "ledPin" en PWM pour faire varier l'intensité lumineuse et piloter le dimmer de 0 à 255
 byte statusCourantLed = 0;                                // 0= initial   1=était en conso EDF   2=était en injection EDF
 
-int delayChangementEtat = 1000;                           // Temps de maintient de la luminosité de la led lord d'une bascule injection/conso et conso/injection
-byte valeurMaximumLed = 60;                               // Variable pour définir l'amplitude maximum de la lumière de la led qui pilote le dimmer
-byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
-byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
+const int delayChangementEtat = 1000;                           // Temps de maintient de la luminosité de la led lord d'une bascule injection/conso et conso/injection
+const byte valeurMaximumLed = 30;                               // Variable pour définir l'amplitude maximum de la lumière de la led qui pilote le dimmer
+const byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
+const byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
-byte maxTemp = 65;                                        // Température de sécurité max pour couper la chauffe
-byte medTemp = 35;                                        // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+const byte maxTemp = 65;                                        // Température de sécurité max pour couper la chauffe
+const byte medTemp = 35;                                        // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
 
-byte brocheBoutonAssist = 7;                              // Broche utilisée pour détecter le sélecteur de marche Hiver, jour/nuit
+const byte brocheBoutonAssist = 7;                              // Broche utilisée pour détecter le sélecteur de marche Hiver, jour/nuit
 int etatBoutonAssist = HIGH;                              // Etat du sélecteur de marche Hiver, jour/nuit
+
+const char* message = "By Julien AMREIN";
+
+const char* messagesSurchauffe[] = {                      // Tableau des variations du message "Surchauffe"
+ "   Surchauffe   ",
+ "  *Surchauffe*  ",
+ " * Surchauffe * ",
+ "*  Surchauffe  *",
+ " * Surchauffe * ",
+ "  *Surchauffe*  "};
+
+const char* messagesModeHiver[] = {                       // Tableau des variations du message "Mode Hiver"
+  "   Mode Hiver   ",
+  "  *Mode Hiver*  ",
+  " * Mode Hiver * ",
+  "*  Mode Hiver  *",
+  " * Mode Hiver * ",
+  "  *Mode Hiver*  "
+};
 
 void setup()
 {
@@ -39,25 +59,39 @@ void setup()
 
   lcd.init();                       
   lcd.backlight();
+//----------------------------------------------------------- Affichage Version du code et de la carte
+  lcd.setCursor(0,0);
+  lcd.print("Code V06-10-2024");
+  lcd.setCursor(0,1);
+  lcd.print("Mod. PCB: BLACK ");
+  delay(1000);
 
-//----------------------------------------------------------- Affichage ECRAN 1
-  affichageVersion();
-  affichageDeveloppeur();
-  delay(3000);                                             // Durée de l'affichage
+//----------------------------------------------------------- Affichage de l'identité du développeur (FONCTION 1)
+afficherMessageAvecDelai(message, 1, 150);
+delay(3000);                                               // Délais de l'affichage du message initial
 
-//----------------------------------------------------------- Affichage ECRAN 2
-  affichageConfiguration();
-  delay(3000);                                             // Durée de l'affichage
+// -----------------------------------------------------------Affichage des paramètres de configuration
+  lcd.setCursor(0,0);                                      // Bloc d'affichage de la config
+  lcd.print("Configuration : ");
+  lcd.setCursor(0,1);
+  lcd.print("Max:    Min:    ");
+  lcd.setCursor(5,1);
+  lcd.print(maxTemp);                                      // Affichage de la température maximum programmée
+  lcd.setCursor(13,1);
+  lcd.print(medTemp);                                      // Affichage de la température minimum heure creuse programmée
+  delay(4000);
 
-//----------------------------------------------------------- Affichage ECRAN 3
-  lcd.setCursor(0,0);                                      // Bloc d'affichage initial avant apparition de "consommation ou injection"
+//------------------------------------------------------------Affichage de l'écran initial avant un affichage de "consommation ou injection"
+  lcd.setCursor(0,0);
   lcd.print("Initialisation..");
-  lcd.setCursor(0,1);                                      // Affichage initial de PWR et TMP
+  lcd.setCursor(0,1);
   lcd.print("Pwr:    Tmp:    ");                           // Affichage initial de PWR et TMP
 
+//------------------------------------------------------------Configuration de la partie EMONLIB
   emon1.voltage(2, 300, 1.7);                              // Tension: input pin, calibration, phase_shift
   emon1.current(1, 57);                                    // Courrant: input pin, calibration.
 
+//------------------------------------------------------------Configuration de la sonde DALLAS
   ds.begin();                                              // sonde DS18B20 activée
 
 }
@@ -65,13 +99,34 @@ void setup()
 //----------------------------------------------------------- Début de la boucle principale
 void loop()
 {
+
 //----------------------------------------------------------- Calcul de température
   ds.requestTemperatures();
   t = ds.getTempCByIndex(0);                              // Affecter à t la valeur de la température relevée
 
-//----------------------------------------------------------- TRAITEMENT DU RETOUR DE SONDE
-  traitementErreurSonde();                                // Erreur sonde NO SENSOR
-  majAffichageTemperature();                              // MAJ affichage de la température si changement de sa valeur
+  // TRAITEMENT DU RETOUR DE SONDE CONCERNANT LA VALEUR DE LA VARIABLE t A AJOUTER ICI: 
+  //    1:Erreur sonde
+  //    2:Température cohérente et affichage LCD à modifier car évolution par rapport à la température précédente
+  //    3:Température TROP ELEVEE par rapport à température MAX programmée
+  //    4:Température TROP BASSE et HEURE CREUSE par rapport à température mini programmée
+
+  // TRAITEMENT 1: Erreur sonde
+  if(t == -127)                                           // Si la SONDE EST ABSENTE, (sans sonde il s'affiche -127)
+    {
+    lcd.setCursor(8,1);                                   // afficher un message de défaut sur lcd 
+    lcd.print("NoSensor");
+    tSTORE = 0;                                           // Mettre à jour la valeur de t dans tSTORE
+    }
+
+  // TRAITEMENT 2: MAJ affichage de la température
+  if((t > 0) && (t < 110) && (tSTORE != t))               // Si la SONDE RETOURNE UNE TEMPERATURE COHERENTE et DIFFERENTE de l'affichage précédent, afficher la température sur lcd
+    {
+    lcd.setCursor(8,1);
+    lcd.print("Tmp:    ");
+    lcd.setCursor(13,1);
+    lcd.print(t);
+    tSTORE = t;                                           // Mettre à jour la valeur de t dans tSTORE
+    }
 
   // TRAITEMENT 3: Température trop élevée
   if(t >= maxTemp)                                        // Si la température est supérieur à maxTemp degrés alors
@@ -102,31 +157,9 @@ void loop()
             tSTORE = t;                                   // Mettre à jour la valeur de t dans tSTORE
             }
 
-//----------------------------------------------------------- Temporisation avec affichage sur écran LCD
+        
 
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("   Surchauffe   ");
-
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("  *Surchauffe*  ");
-
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print(" * Surchauffe * ");
-
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("*  Surchauffe  *");
-
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print(" * Surchauffe * ");
-
-        delay(1000);                                      // Boucle de pause en attendant une redescente de la température
-        lcd.setCursor(0,0);                               // Bloc d'affichage de la sécurité de chauffe
-        lcd.print("  *Surchauffe*  ");        
+        afficherAlerteSurchauffe();                       // Temporisation avec affichage sur écran LCD (FONCTION 2)
         }
         
     lcd.setCursor(0,0);                                   // Bloc d'affichage de la sécurité de chauffe
@@ -149,31 +182,7 @@ void loop()
 
     while((t < medTemp) && (t > 0) && (etatBoutonAssist == LOW))
       {
-        //----------------------------------------------------------- Temporisation avec affichage sur écran LCD
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print("   Mode Hiver   ");
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print("  *Mode Hiver*  ");
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print(" * Mode Hiver * ");
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print("*  Mode Hiver  *");
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print(" * Mode Hiver * ");
-
-      delay(1000);                                         // Boucle de pause en attendant une remontée de la température
-      lcd.setCursor(0,0);                                  // Bloc d'affichage de la sécurité de chauffe
-      lcd.print("  *Mode Hiver*  ");
+      afficherModeHiver();                                 // Temporisation avec affichage sur écran LCD (FONCTION 3)
 
       etatBoutonAssist = digitalRead(brocheBoutonAssist);  // ici lire l'état du bouton sélecteur de mode hiver
       ds.requestTemperatures();                            // Reprise de la température pour confirmer
@@ -190,18 +199,17 @@ void loop()
 
       }
     valeurLedDimmer = 0;
-    analogWrite(ledPin, valeurLedDimmer);               // Puissance de chauffe à 0 pour fin de mode hiver
-    lcd.setCursor(5,1);                                 // Affichage sur ecran LCD de power à 0
+    analogWrite(ledPin, valeurLedDimmer);                  // Puissance de chauffe à 0 pour fin de mode hiver
+    lcd.setCursor(5,1);                                    // Affichage sur ecran LCD de power à 0
     lcd.print("   ");
     lcd.setCursor(5,1);
     lcd.print(valeurLedDimmer);
 
-    lcd.setCursor(0,0);                                // Bloc d'affichage du hautde sortie du mode hiver
+    lcd.setCursor(0,0);                                    // Bloc d'affichage du hautde sortie du mode hiver
     lcd.print("Mode Hiver FINI ");
   }
 
 //----------------------------------------------------------- Calculs EmonLib
-
   emon1.calcVI(20,500);                                   // Calculate all. No.of half wavelengths (crossings), time-out
 
   float realPower       = emon1.realPower;                //extract Real Power into variable
@@ -299,80 +307,45 @@ void loop()
     delay(2000);                                         // Puis on fige le système pendant X secondes pour limiter les variations intempestives (A tester pour validation)
   }
 
-}
-
-
   //------------------------------------------------------------------------------------------------------------
-  //                              Les fonctions isolées du code sont ci-dessous
-  //------------------------------------------------------------------------------------------------------------
-  /*
-        Liste des fonctions:
 
-          1- affichageVersion() - Affichage initial
-          2- Affichage Mode hiver
-          3- Affichage Surchauffe
-          4-
-  */
-
-//----------------------------------------------------------------------------------
-void affichageVersion(){
-  lcd.setCursor(0,0);
-  lcd.print("Code V10-11-2024");
-  lcd.setCursor(0,1);
-  lcd.print("Mod. PCB: BLACK ");
-  delay(1500);
 }
 
-//----------------------------------------------------------------------------------
-void affichageDeveloppeur() {
-    const char* message = "By Julien AMREIN";
 
-    // Efface la ligne entière avant l'affichage
-    lcd.setCursor(0, 1);
-    lcd.print("                ");
+//------------------------------------------------------------------FONCTIONS DU PROGRAMME----------------------
 
-    // Affiche chaque caractère avec un délai entre eux
-    for (int i = 0; message[i] != '\0'; i++) {
-        lcd.setCursor(i, 1);
-        lcd.print(message[i]);
-        delay(150);
-    }
+// FONCTION 1
+void afficherMessageAvecDelai(const char* texte, int ligne, int delai) {
+  lcd.setCursor(0,1);
+  lcd.print("                ");  // Clear de la ligne du bas
+  lcd.setCursor(0,1);
+
+  for (int i = 0; texte[i] != '\0'; i++) {
+    lcd.setCursor(i, ligne);      // Positionne le curseur pour chaque caractère
+    lcd.print(texte[i]);          // Affiche le caractère actuel
+    delay(delai);                 // Pause entre chaque affichage
+  }
 }
 
-//----------------------------------------------------------------------------------
-void affichageConfiguration(){
-  lcd.setCursor(0,0);                                      // Bloc d'affichage de la config
-  lcd.print("Configuration : ");
-  lcd.setCursor(0,1);
-  lcd.print("Max:    Min:    ");
-  lcd.setCursor(5,1);
-  lcd.print(maxTemp);                                      // Affichage de la température maximum programmée
-  lcd.setCursor(13,1);
-  lcd.print(medTemp);                                      // Affichage de la température minimum heure creuse programmée
+// FONCTION 2
+// Fonction pour afficher le message "Surchauffe" avec des variations et des pauses
+void afficherAlerteSurchauffe() {
+  for (int i = 0; i < sizeof(messagesSurchauffe) / sizeof(messagesSurchauffe[0]); i++) {
+    lcd.setCursor(0, 0);                 // Positionne le curseur au début de la première ligne
+    lcd.print(messagesSurchauffe[i]);    // Affiche la variante actuelle du message
+    delay(1000);                         // Pause d'une seconde entre chaque affichage
   }
-//----------------------------------------------------------------------------------
-  void  traitementErreurSonde(){
-    if(t == -127)                                           // Si la SONDE EST ABSENTE, (sans sonde il s'affiche -127)
-    {
-      lcd.setCursor(8,1);                                   // afficher un message de défaut sur lcd 
-      lcd.print("NoSensor");
-      tSTORE = 0;                                           // Mettre à jour la valeur de t dans tSTORE
-    }
+}
+
+// FONCTION 3
+// Fonction pour afficher le message "Mode Hiver" avec des variations et des pauses
+void afficherModeHiver() {
+  for (int i = 0; i < sizeof(messagesModeHiver) / sizeof(messagesModeHiver[0]); i++) {
+    lcd.setCursor(0, 0);                 // Positionne le curseur au début de la première ligne
+    lcd.print(messagesModeHiver[i]);     // Affiche la variante actuelle du message
+    delay(1000);                         // Pause d'une seconde entre chaque affichage
   }
-//----------------------------------------------------------------------------------
-  void majAffichageTemperature(){
-    if((t > 0) && (t < 110) && (tSTORE != t))               // Si la SONDE RETOURNE UNE TEMPERATURE COHERENTE et DIFFERENTE de l'affichage précédent, afficher la température sur lcd
-    {
-     lcd.setCursor(8,1);
-     lcd.print("Tmp:    ");
-     lcd.setCursor(13,1);
-     lcd.print(t);
-     tSTORE = t;                                           // Mettre à jour la valeur de t dans tSTORE
-    }
-  }
-
-
-
+}
 
 
 
