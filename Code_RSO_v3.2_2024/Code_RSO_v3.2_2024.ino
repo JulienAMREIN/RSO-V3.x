@@ -25,7 +25,7 @@ byte valeurIncrementationLed = 1;                         // Le pas d'incrément
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
 byte maxTemp = 65;                                        // Température de sécurité max pour couper la chauffe
-byte medTemp = 35;                                        // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
+byte medTemp = 25;                                        // Température de chauffe à atteindre en heure creuse au minimum en mode "complément HC"
 int tSTORE = 0;                                           // Variable de stockage de la température précédente enregistrée pour comparer au nouveau relevé
 int t = 0;                                                // Variable de stockage de la température relevée
 
@@ -41,12 +41,14 @@ void setup()
   lcd.backlight();
 
 //----------------------------------------------------------- Affichage ECRAN 1
-  affichageVersion();
-  affichageDeveloppeur();
+  affichageVersion();                                      // Ligne du haut et du bas
+  delay(3000);                                             // Durée de l'affichage
+
+  affichageDeveloppeur();                                  // Ligne du bas
   delay(3000);                                             // Durée de l'affichage
 
 //----------------------------------------------------------- Affichage ECRAN 2
-  affichageConfiguration();
+  affichageConfiguration();                                // Ligne du haut et du bas
   delay(3000);                                             // Durée de l'affichage
 
 //----------------------------------------------------------- Affichage ECRAN 3
@@ -317,10 +319,9 @@ void loop()
 //----------------------------------------------------------------------------------
 void affichageVersion(){
   lcd.setCursor(0,0);
-  lcd.print("Code V10-11-2024");
+  lcd.print("Code V11-11-2024");
   lcd.setCursor(0,1);
   lcd.print("Mod. PCB: BLACK ");
-  delay(1500);
 }
 
 //----------------------------------------------------------------------------------
