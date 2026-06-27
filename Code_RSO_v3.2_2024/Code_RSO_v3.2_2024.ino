@@ -19,8 +19,8 @@ byte ledPin = 9;                                          // Variable pour déte
 byte valeurLedDimmer = 0;                                 // Variable de la valeur de sortie sur la pin "ledPin" en PWM pour faire varier l'intensité lumineuse et piloter le dimmer de 0 à 255
 byte statusCourantLed = 0;                                // 0= initial   1=était en conso EDF   2=était en injection EDF
 
-int delayChangementEtat = 1000;                           // Temps de maintient de la luminosité de la led lord d'une bascule injection/conso et conso/injection
-byte valeurMaximumLed = 60;                               // Variable pour définir l'amplitude maximum de la lumière de la led qui pilote le dimmer
+int delayChangementEtat = 500;                           // Temps de maintient de la luminosité de la led lord d'une bascule injection/conso et conso/injection
+byte valeurMaximumLed = 150;                               // Variable pour définir l'amplitude maximum de la lumière de la led qui pilote le dimmer
 byte valeurIncrementationLed = 1;                         // Le pas d'incrémentation pour augmenter la luminosité de la LED et se rapprocher du seuil consomation depuis EDF
 byte valeurDecrementationLed = 1;                         // Le pas de décrémentation pour diminuer la luminosité de la LED et stopper rapidement la consomation depuis EDF
 
@@ -319,7 +319,7 @@ void loop()
 //----------------------------------------------------------------------------------
 void affichageVersion(){
   lcd.setCursor(0,0);
-  lcd.print("Code V11-11-2024");
+  lcd.print("Code V26-06-2024");
   lcd.setCursor(0,1);
   lcd.print("PCB Mod.   BLACK");
 }
